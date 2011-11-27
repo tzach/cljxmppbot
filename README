@@ -1,0 +1,10 @@
+# cljxmppbot
+A trivial XMPP server built with Clojure using appengine-magic, compojure.
+
+## Usage
+See here 
+http://cljxmppbot.appspot.com/
+Use at at your own risk
+
+## License
+Distributed under the Eclipse Public License, the same as Clojure.
