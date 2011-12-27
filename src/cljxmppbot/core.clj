@@ -11,8 +11,7 @@
    [appengine-magic.multipart-params :only [wrap-multipart-params]]
    [ring.middleware params keyword-params]
    [hiccup.core]
-   [hiccup.page-helpers]
-   [hiccup.form-helpers])
+   [hiccup.page-helpers])
   (:import com.google.appengine.api.xmpp.JID)
   (:import com.google.appengine.api.xmpp.Message)
   (:import com.google.appengine.api.xmpp.MessageBuilder)
@@ -65,7 +64,7 @@
   (html
    (doctype :html4)
    [:head 
-    [:h1 "XMPP Bot test page v1i"]
+    [:h1 "XMPP Bot test page v1j"]
     ]
    [:body
     [:h3 "to interact with the bot, just add the following to your google talk or any other XMPP client: bot@cljxmppbot.appspotchat.com"]
@@ -75,38 +74,31 @@
     [:p "Clojure Code is avilable on " (link-to "https://github.com/tzach" "github")]]
     ))
 
-(defn handle-queue-msg [from to body]
-  (println "handle-queue-msg. from:" from ",to:" to "body:" body)
-  (send-res from (str body "is a good question, but I do not have an answer yet."))
-  (send-res from "I'm still learning, please come back in a few days.")
-  )
-  
-
 ;; map of a predicat, action  and true and false response
 (def *pred-res*
-     {not-ascii? [:send "Sorry, I only speak plain English. please try to rephrase"]
-      greeting? [:send "Hello to you to!"]
-      foul-word? [:send "Sorry, unlike you, I will not ue or allow foul words"]
-      question? [:delay "Interesting question! Let me think for a few seconds..."]
-      identity [:send "ask me anything"]})
-     
+     {not-ascii? "Sorry, I only speak plain English. please try to rephrase"
+      greeting? "Hello to you to!"
+      foul-word? "Sorry, I will not allow foul words!"
+      question? "Interesting question! but I'm still learning, please come back in a few days."
+      identity "ask me anything"})
 
-(defn handle-chat-msg [from to body]
-  (println "handle-chat-msg. from:" from ",to:" to "body:" body)
+(defn handle-queue-msg [from to body]
+  (println "handle-queue-msg. from:" from ",to:" to "body:" body)
   (let [s (-> body clojure.string/lower-case clojure.string/trim)
-	[pred [action res]] (find-first #((first %) s) *pred-res*)]
-    (condp  = action
-	:send (send-res from res)
-	:delay (do
-		 (send-res from res)
-		 (tq/add! :url "/chat_callback/"
-			  :params {:body body :from from :to to}
-			  :countdown-ms 20000)))))
+	[pred res] (find-first #((first %) s) *pred-res*)]
+    (send-res from res)
+    ))
 
+(defn queue-msg [from to body]
+  "Enter queue the message"
+  (println "handle-chat-msg. from:" from ",to:" to "body:" body)
+  (tq/add! :url "/chat_callback/"
+	   :params {:body body :from from :to to}))
+  
 (defroutes cljxmppbot-app-handler
   (GET "/" [] form)
   (POST "/_ah/xmpp/message/chat/" [body from to]
-	(handle-chat-msg from to body)
+	(queue-msg from to body)
 	{:status 200})
   (POST "/chat_callback/" [body from to]
 	(do
@@ -122,8 +114,6 @@
 					 wrap-multipart-params
 					 wrap-keyword-params
 					 wrap-params))
-
-
 
 
 ;; (ae/start cljxmppbot-app)

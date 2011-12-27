@@ -22,4 +22,3 @@
 
 ;; deploy on GAE
 ;; d:/code/appengine-java-sdk-1.5.5/bin/appcfg.cmd update war/
-
